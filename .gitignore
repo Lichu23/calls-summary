@@ -1,0 +1,50 @@
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Misc
+.DS_Store
+*.pem
+Thumbs.db
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Claude & planning files (private)
+CLAUDE.md
+PHASES.md
+ERRORS.md
+PLAN.md
+PROGRESS.md
+*.private.md
+.claude/
+
+# Secrets
+.env
+.env.local
+.env.*.local
+credentials.json
+*.pem
+*.key
+
+# Keep README.md public
+!README.md
