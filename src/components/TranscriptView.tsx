@@ -54,7 +54,7 @@ export default function TranscriptView({ fullText, speakerSegments }: Transcript
                 {getLabel(seg.speaker)}
               </span>
               <span className="text-xs text-muted-foreground">
-                {formatTimestamp(seg.start)}
+                {formatTimestamp(seg.start)} → {formatTimestamp(seg.end)}
               </span>
             </div>
             <p className="text-sm">{seg.text}</p>

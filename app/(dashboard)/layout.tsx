@@ -1,6 +1,6 @@
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function DashboardLayout({
   children,
@@ -15,9 +15,7 @@ export default function DashboardLayout({
             Calls Summary
           </Link>
           <div className="flex items-center gap-3">
-            <Button asChild size="sm">
-              <Link href="/calls/new">New Recording</Link>
-            </Button>
+            <ThemeToggle />
             <UserButton />
           </div>
         </div>
