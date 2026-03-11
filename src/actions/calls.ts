@@ -1,13 +1,21 @@
 "use server";
 
 import { db } from "@/db";
-import { calls, transcriptions, summaries } from "@/db/schema";
-import { auth } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
+import { calls, transcriptions, summaries, users } from "@/db/schema";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { eq, and, desc } from "drizzle-orm";
 
 export async function createCall(contactName?: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
+
+  // Ensure user row exists (upsert on first call)
+  const clerkUser = await currentUser();
+  await db.insert(users).values({
+    id: userId,
+    email: clerkUser?.emailAddresses[0]?.emailAddress ?? "",
+    name: clerkUser?.fullName ?? null,
+  }).onConflictDoNothing();
 
   const [call] = await db.insert(calls).values({
     userId,
@@ -68,4 +76,31 @@ export async function failCall(callId: string) {
   await db.update(calls)
     .set({ status: "failed", endedAt: new Date() })
     .where(eq(calls.id, callId));
+}
+
+export async function getUserCalls() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  return db.select().from(calls)
+    .where(eq(calls.userId, userId))
+    .orderBy(desc(calls.createdAt));
+}
+
+export async function getCall(callId: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const [call] = await db.select().from(calls)
+    .where(and(eq(calls.id, callId), eq(calls.userId, userId)));
+
+  if (!call) return null;
+
+  const [transcription] = await db.select().from(transcriptions)
+    .where(eq(transcriptions.callId, callId));
+
+  const [summary] = await db.select().from(summaries)
+    .where(eq(summaries.callId, callId));
+
+  return { call, transcription: transcription ?? null, summary: summary ?? null };
 }
