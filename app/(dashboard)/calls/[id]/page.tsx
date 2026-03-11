@@ -2,6 +2,10 @@ import { getCall } from "@/actions/calls";
 import { notFound } from "next/navigation";
 import TranscriptView from "@/components/TranscriptView";
 import SummaryCard from "@/components/SummaryCard";
+import { ProcessingPoller } from "@/components/ProcessingPoller";
+
+export const revalidate = 0; // always fetch fresh — ProcessingPoller needs live data
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -22,6 +26,13 @@ function formatDate(date: Date) {
   }).format(new Date(date));
 }
 
+const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  completed: "default",
+  in_progress: "secondary",
+  processing: "secondary",
+  failed: "destructive",
+};
+
 export default async function CallDetailPage({
   params,
 }: {
@@ -33,29 +44,36 @@ export default async function CallDetailPage({
   if (!result) notFound();
 
   const { call, transcription, summary } = result;
-
   const isProcessing = call.status === "in_progress" || call.status === "processing";
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* Auto-refresh while processing */}
+      {isProcessing && <ProcessingPoller />}
+
       {/* Back link */}
       <Button asChild variant="ghost" size="sm" className="-ml-2">
         <Link href="/">&larr; Back to calls</Link>
       </Button>
 
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {call.contactName ?? "Unknown"}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {formatDate(call.startedAt)} &middot; {formatDuration(call.durationSeconds)}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-semibold">
+            {call.contactName ?? "Unknown"}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {formatDate(call.startedAt)} &middot; {formatDuration(call.durationSeconds)}
+          </p>
+        </div>
+        <Badge variant={statusVariant[call.status] ?? "outline"}>
+          {call.status.replace("_", " ")}
+        </Badge>
       </div>
 
       {/* Processing state */}
       {isProcessing && (
-        <div className="flex flex-col items-center gap-4 py-16 text-center">
+        <div className="flex flex-col items-center gap-4 py-16 text-center rounded-lg border">
           <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           <div>
             <p className="font-medium">Processing your call</p>
@@ -73,9 +91,9 @@ export default async function CallDetailPage({
         </div>
       )}
 
-      {/* Results */}
+      {/* Results — two columns on large screens */}
       {call.status === "completed" && (
-        <>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {summary && (
             <section className="rounded-lg border p-5">
               <h2 className="text-lg font-semibold mb-4">Summary</h2>
@@ -101,7 +119,7 @@ export default async function CallDetailPage({
               />
             </section>
           )}
-        </>
+        </div>
       )}
     </div>
   );

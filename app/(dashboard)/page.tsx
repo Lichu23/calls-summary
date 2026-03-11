@@ -1,6 +1,9 @@
 import { getUserCalls } from "@/actions/calls";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+
+export const revalidate = 30; // cache calls list for 30 seconds
 
 function formatDuration(seconds: number | null) {
   if (!seconds) return "—";
@@ -19,17 +22,11 @@ function formatDate(date: Date) {
   }).format(new Date(date));
 }
 
-const statusColors: Record<string, string> = {
-  completed: "bg-green-100 text-green-800",
-  in_progress: "bg-blue-100 text-blue-800",
-  processing: "bg-yellow-100 text-yellow-800",
-  failed: "bg-red-100 text-red-800",
-};
-
-const sentimentColors: Record<string, string> = {
-  positive: "bg-green-100 text-green-800",
-  neutral: "bg-gray-100 text-gray-800",
-  negative: "bg-red-100 text-red-800",
+const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  completed: "default",
+  in_progress: "secondary",
+  processing: "secondary",
+  failed: "destructive",
 };
 
 export default async function DashboardPage() {
@@ -62,8 +59,8 @@ export default async function DashboardPage() {
           <thead className="bg-muted/50">
             <tr>
               <th className="text-left px-4 py-3 font-medium">Contact</th>
-              <th className="text-left px-4 py-3 font-medium">Date</th>
-              <th className="text-left px-4 py-3 font-medium">Duration</th>
+              <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">Date</th>
+              <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Duration</th>
               <th className="text-left px-4 py-3 font-medium">Status</th>
             </tr>
           </thead>
@@ -78,20 +75,16 @@ export default async function DashboardPage() {
                     {call.contactName ?? "Unknown"}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">
+                <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
                   {formatDate(call.startedAt)}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">
+                <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
                   {formatDuration(call.durationSeconds)}
                 </td>
                 <td className="px-4 py-3">
-                  <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                      statusColors[call.status] ?? "bg-gray-100 text-gray-800"
-                    }`}
-                  >
+                  <Badge variant={statusVariant[call.status] ?? "outline"}>
                     {call.status.replace("_", " ")}
-                  </span>
+                  </Badge>
                 </td>
               </tr>
             ))}
